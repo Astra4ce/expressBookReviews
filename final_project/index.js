@@ -12,6 +12,33 @@ app.use("/customer",session({secret:"fingerprint_customer",resave: true, saveUni
 
 app.use("/customer/auth/*", function auth(req,res,next){
 //Write the authenication mechanism here
+
+// get the authentication header from req
+const authHeader = req.headers.authorization;
+
+if (!authHeader) {
+    return res.status(401).json({ message : "No token provided"});
+}
+
+// Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+// split it and get the second half
+const token = authHeader.split(" ")[1]
+
+if (!token) {
+    return res.status(401).json({ message: "Malformed token"});
+}
+
+try {
+    const decoded = jwt.verify(token, "fingerprint_customer");
+    req.user = decoded;
+    next();
+} catch (err) {
+    return res.status(403).json({ message: "Invalid or expired token"});
+}
+
+
+
+
 });
  
 const PORT =5000;
